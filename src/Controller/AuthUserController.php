@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Annotations as OA;
 
 #[Route('api/v1')]
 class AuthUserController extends AbstractController
@@ -29,12 +30,135 @@ class AuthUserController extends AbstractController
         $this->validator = $validator;
     }
 
+    /**
+     * @OA\Post(
+     *     path="api/v1/auth",
+     *     description="Authenticate user with JWT token",
+     * )
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\JsonContent(
+     *          @OA\Property(
+     *              property="username",
+     *              type="string",
+     *              example="user@example.com"
+     *          ),
+     *          @OA\Property(
+     *              property="password",
+     *              type="string",
+     *              example="123qwe"
+     *          )
+     *       )
+     * )
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns JWT token for user authentication",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="token",
+     *          type="string"
+     *        )
+     *     )
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="User authentication failed",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="code",
+     *          type="string"
+     *        ),
+     *        @OA\Property(
+     *          property="message",
+     *          type="string"
+     *        ),
+     *     )
+     * )
+     * @OA\Response(
+     *     response="default",
+     *     description="Unxepected error",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="code",
+     *          type="string"
+     *        ),
+     *        @OA\Property(
+     *          property="message",
+     *          type="string"
+     *        ),
+     *     )
+     * )
+     */
     #[Route('/auth', name: 'api_login', methods: ['POST'])]
     public function login(): Response
     {
         //auth
     }
 
+    /**
+     * @OA\Post(
+     *     path="api/v1/register",
+     *     description="Register user",
+     * )
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\JsonContent(
+     *          @OA\Property(
+     *              property="username",
+     *              type="string",
+     *              example="user@example.com"
+     *          ),
+     *          @OA\Property(
+     *              property="password",
+     *              type="string",
+     *              example="123qwe"
+     *          )
+     *       )
+     * )
+     * @OA\Response(
+     *     response=201,
+     *     description="Returns JWT token and roles for user authentication",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="token",
+     *          type="string"
+     *        ),
+     *        @OA\Property(
+     *          property="roles",
+     *          type="array",
+     *          @OA\Items(type="string")
+     *        )
+     *     )
+     * )
+     * @OA\Response(
+     *     response=400,
+     *     description="User registration failed",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="code",
+     *          type="string"
+     *        ),
+     *        @OA\Property(
+     *          property="message",
+     *          type="string"
+     *        ),
+     *     )
+     * )
+     * @OA\Response(
+     *     response="default",
+     *     description="Unxepected error",
+     *     @OA\JsonContent(
+     *        @OA\Property(
+     *          property="code",
+     *          type="string"
+     *        ),
+     *        @OA\Property(
+     *          property="message",
+     *          type="string"
+     *        ),
+     *     )
+     * )
+     */
     #[Route('/register', name: 'api_registration', methods: ['POST'])]
     public function registration(
         Request $request,
