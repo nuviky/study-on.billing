@@ -25,6 +25,13 @@ class Transaction
     #[ORM\Column(type: 'datetime', nullable: true)]
     private $validityPeriod;
 
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'transactions')]
+    #[ORM\JoinColumn(nullable: false)]
+    private $user_;
+
+    #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'transactions')]
+    private $course;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -74,6 +81,30 @@ class Transaction
     public function setValidityPeriod(?\DateTimeInterface $validityPeriod): self
     {
         $this->validityPeriod = $validityPeriod;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user_;
+    }
+
+    public function setUser(?User $user_): self
+    {
+        $this->user_ = $user_;
+
+        return $this;
+    }
+
+    public function getCourse(): ?Course
+    {
+        return $this->course;
+    }
+
+    public function setCourse(?Course $course): self
+    {
+        $this->course = $course;
 
         return $this;
     }
