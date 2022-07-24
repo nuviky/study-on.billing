@@ -42,7 +42,7 @@ class PaymentService
 
                 if ($course->getType() != 0) {
                     $transaction->setCount($course->getPrice());
-                    if ($course->getType() == 1) {
+                    if ($course->getType() == 2) {
                         $transaction->setValidityPeriod((new \DateTime())->modify('+1 week'));
                     }
                     $entityManager->persist($transaction);

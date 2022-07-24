@@ -63,10 +63,10 @@ class CourseController extends AbstractController
                 if ($course->getType() === 0) {
                     $answer['course_type'] = '0';
                 } elseif ($course->getType() === 1) {
-                    $answer['course_type'] = '1';
+                    $answer['course_type'] = '2';
                     $answer['expires_at'] = (new \DateTime())->modify('+1 week');
                 } else {
-                    $answer['course_type'] = '2';
+                    $answer['course_type'] = '1';
                 }
                 $answer = ['success' => true];
                 return $this->json($answer, Response::HTTP_OK);
@@ -80,14 +80,14 @@ class CourseController extends AbstractController
     #[Route('/courses', name: 'app_new_course', methods: ['POST'])]
     public function new(CourseRepository $courseRepository, UserRepository $userRepository, EntityManagerInterface $entityManager, Request $request): Response
     {
-        $courseDTO = $this->serializer->deserialize($request->getContent(), CourseDTO::class, 'json');
         try {
+            $courseDTO = $this->serializer->deserialize($request->getContent(), CourseDTO::class, 'json');
             $course = $this->courseRequest->transformToObject($courseDTO);
             $entityManager->persist($course);
             $entityManager->flush();
             return $this->json(['success'=> true], Response::HTTP_CREATED);
         }catch (\Exception $exception){
-            return $this->json(['success' => false], Response::HTTP_BAD_REQUEST);
+            return $this->json(['errors' => $exception], Response::HTTP_BAD_REQUEST);
         }
     }
 

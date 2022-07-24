@@ -10,9 +10,9 @@ class CourseDTO
     #[Serializer\Type("string")]
     public string $character_code;
 
-    #[Serializer\Type("smallint")]
-    public string $type;
+    #[Serializer\Type("int")]
+    public int $type;
 
     #[Serializer\Type("float")]
-    public string $price;
+    public float $price;
 }

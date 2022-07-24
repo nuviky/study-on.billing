@@ -39,6 +39,25 @@ class TransactionRepository extends ServiceEntityRepository
         }
     }
 
+    public function findEndingForMail($userId): array
+    {
+        $connect = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT c.character_code, t.validity_period FROM transaction t
+            INNER JOIN course c ON c.id = t.course_id
+            WHERE t.type = 0 
+            AND t.user__id = :user_id 
+            AND t.validity_period::date = (now()::date + '1 day'::interval)
+            ORDER BY t.date DESC
+            ";
+        $query = $connect->prepare($sql);
+        $query = $query->executeQuery([
+            'user_id' => $userId,
+        ]);
+        return $query->fetchAllAssociative();
+    }
+
 //    /**
 //     * @return Transaction[] Returns an array of Transaction objects
 //     */
