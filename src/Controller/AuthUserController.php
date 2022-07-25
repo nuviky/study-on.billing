@@ -5,7 +5,11 @@ namespace App\Controller;
 use App\DTO\Request\UserRegisterRequest;
 use App\DTO\UserDTO;
 use App\Repository\UserRepository;
+use App\Service\PaymentService;
 use Doctrine\ORM\EntityManagerInterface;
+use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
+use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
+use Gesdinet\JWTRefreshTokenBundle\Service\RefreshToken;
 use JMS\Serializer\SerializerBuilder;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -165,7 +169,10 @@ class AuthUserController extends AbstractController
         UserRegisterRequest $registerDTO,
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
-        JWTTokenManagerInterface $tokenManager
+        JWTTokenManagerInterface $tokenManager,
+        RefreshTokenGeneratorInterface $refreshTokenGenerator,
+        RefreshTokenManagerInterface $refreshTokenManager,
+        PaymentService $paymentService
     ): Response
     {
         $userDto = $this->serializer->deserialize(
@@ -194,16 +201,23 @@ class AuthUserController extends AbstractController
                 'errors' => $jsonErrors,
             ], Response::HTTP_BAD_REQUEST);
         }
-
         $user = $registerDTO->transformToObject($userDto);
+        $paymentService->deposit($user, $_ENV['DEPOSIT_START'], $entityManager);
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return $this->json([
-                'token' => $tokenManager->create($user),
-                'roles' => $user->getRoles()
-        ],
-            Response::HTTP_CREATED
-        );
+        $refreshToken = $refreshTokenGenerator->createForUserWithTtl($user, (new \DateTime())->modify('+1 month')->getTimestamp());
+        $refreshTokenManager->save($refreshToken);
+        $userAuth = new UserDTO();
+        $userAuth->roles =  $user->getRoles();
+        $userAuth->token = $tokenManager->create($user);
+        $userAuth->refresh_token = $refreshToken->getRefreshToken();
+        return $this->json($userAuth, Response::HTTP_CREATED);
+    }
+
+    #[Route('/token/refresh', name: 'api_refresh_token', methods: ['POST'])]
+    public function refresh(Request $request, RefreshToken $refreshService)
+    {
+        return $refreshService->refresh($request);
     }
 }

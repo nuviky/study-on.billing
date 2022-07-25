@@ -22,4 +22,10 @@ class UserDTO
 
     #[Serializer\Type("array")]
     public array $roles;
+
+    #[Serializer\Type("string")]
+    public string $token;
+
+    #[Serializer\Type("string")]
+    public string $refresh_token;
 }

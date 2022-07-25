@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Course;
 use App\Entity\Transaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -39,12 +40,13 @@ class TransactionRepository extends ServiceEntityRepository
         }
     }
 
-    public function findEndingForMail($userId): array
+    public function findEndingTransaction($userId): array
     {
         $connect = $this->getEntityManager()->getConnection();
 
         $sql = "
-            SELECT c.character_code, t.validity_period FROM transaction t
+            SELECT c.character_code, t.validity_period 
+            FROM transaction t
             INNER JOIN course c ON c.id = t.course_id
             WHERE t.type = 0 
             AND t.user__id = :user_id 
@@ -55,6 +57,22 @@ class TransactionRepository extends ServiceEntityRepository
         $query = $query->executeQuery([
             'user_id' => $userId,
         ]);
+        return $query->fetchAllAssociative();
+    }
+
+    public function findLastMonthTransaction()
+    {
+        $connect = $this->getEntityManager()->getConnection();
+        $sql = "
+            SELECT COUNT(t.id), SUM(t.count), c.character_code, c.type 
+            FROM transaction t
+            INNER JOIN course c ON c.id = t.course_id
+            AND t.date::date between (now()::date - '1 month'::interval) AND now()::date
+            AND t.type = 0
+            GROUP BY c.character_code, c.type
+            ";
+        $query = $connect->prepare($sql);
+        $query = $query->executeQuery();
         return $query->fetchAllAssociative();
     }
 

@@ -13,7 +13,7 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
-class EndPaymentsCommand extends Command
+class EndPaymentsReportCommand extends Command
 {
     private $twig;
     private $mailer;
@@ -28,26 +28,23 @@ class EndPaymentsCommand extends Command
         $this->manager = $entityManager;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $users = $this->manager->getRepository(User::class)->findAll();
+        $data = [];
         foreach ($users as $user) {
-
-            $dataForMail = $this->manager->getRepository(Transaction::class)->findEndingForMail($user->getId());
-            if (count($dataForMail) != 0) {
-
-                $htmlMail = $this->twig->render('mail/endPayment.html.twig',['dataForMail' => $dataForMail]);
+            $data = $this->manager->getRepository(Transaction::class)->findEndingTransaction($user->getId());
+            if (count($data) != 0) {
+                $htmlMail = $this->twig->render('mail/endPayment.html.twig',['dataForMail' => $data]);
                 $message = (new Email())
                     ->to($user->getUserIdentifier())
                     ->from('report-system@study-on')
                     ->subject('Уведомление об окончании срока аренды курсов')
                     ->html($htmlMail);
-
                 try {
                     $this->mailer->send($message);
                 } catch (TransportExceptionInterface $e) {
                     $output->writeln($e->getMessage());
-
                     $output->writeln('Возникла ошибка. Не удалось отправить сообщение');
                     return Command::FAILURE;
                 }

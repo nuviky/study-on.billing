@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DTO\CourseDTO;
 use App\DTO\Request\CourseRequest;
 use App\DTO\Response\CourseResponse;
+use App\Entity\Course;
 use App\Repository\CourseRepository;
 use App\Repository\UserRepository;
 use App\Service\PaymentService;
@@ -94,12 +95,14 @@ class CourseController extends AbstractController
     #[Route('/courses/{code}', name: 'app_change_course', methods: ['POST'])]
     public function change($code, CourseRepository $courseRepository, UserRepository $userRepository, EntityManagerInterface $entityManager, Request $request): Response
     {
-        $course = $courseRepository->findOneBy(['characterCode' => $code]);
+        $course = $entityManager->getRepository(Course::class)->findOneBy(['characterCode' => $code]);
         if ($course){
             try {
                 $courseDTO = $this->serializer->deserialize($request->getContent(), CourseDTO::class, 'json');
-                $course = $this->courseRequest->transformToObject($courseDTO);
-                $entityManager->persist($course);
+                $courseNew = $this->courseRequest->transformToObject($courseDTO);
+                $courseRepository->remove($courseRepository->findOneBy(['characterCode' => $code]));
+                $entityManager->flush();
+                $courseRepository->add($courseNew);
                 $entityManager->flush();
                 return $this->json(['success'=> true], Response::HTTP_CREATED);
             } catch (\Exception $exception){

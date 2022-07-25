@@ -39,6 +39,25 @@ class CourseRepository extends ServiceEntityRepository
         }
     }
 
+    public function findLast($userId): array
+    {
+        $connect = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT c.character_code, t.validity_period FROM transaction t
+            INNER JOIN course c ON c.id = t.course_id
+            WHERE t.type = 0 
+            AND t.user__id = :user_id 
+            AND t.validity_period::date = (now()::date + '3 day'::interval)
+            ORDER BY t.date DESC
+            ";
+        $query = $connect->prepare($sql);
+        $query = $query->executeQuery([
+            'user_id' => $userId,
+        ]);
+        return $query->fetchAllAssociative();
+    }
+
 //    /**
 //     * @return Course[] Returns an array of Course objects
 //     */
